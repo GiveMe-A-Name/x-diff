@@ -1,0 +1,14 @@
+---
+rust:
+  request_first:
+    method: GET
+    url: https://www.rust-lang.org/
+    headers:
+      user-agent: Aloha
+    params:
+      hello: world
+    body: "123"
+  request_second:
+    method: GET
+    url: https://www.rust-lang.org/
+    params: {}

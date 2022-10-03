@@ -1,0 +1,26 @@
+{
+  "rust": {
+    "request_first": {
+      "method": "GET",
+      "url": "https://www.rust-lang.org/",
+      "headers": {
+        "user-agent": "Aloha"
+      },
+      "params": {
+        "hello": "world"
+      }
+    },
+    "request_second": {
+      "method": "GET",
+      "url": "https://www.rust-lang.org/"
+    },
+    "response": {
+      "skip_headers": [
+        "set-cookie",
+        "date",
+        "via",
+        "x-amz-cf-id"
+      ]
+    }
+  }
+}

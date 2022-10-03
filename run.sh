@@ -1,0 +1,1 @@
+cargo run -- run -c ./fixtures/test.yaml -p rust
