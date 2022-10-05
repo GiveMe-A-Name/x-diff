@@ -11,12 +11,11 @@ use crate::{ExtraArgs, ResponseExt};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct RequestProfile {
-    // TODO：known about http_serde
+    // TODO: known about with
     #[serde(with = "http_serde::method", default)]
-    // TODO：known about reqwest Method, Url,
     pub method: Method,
     pub url: Url,
-    #[serde(skip_serializing_if = "Option::is_none", default)]
+    #[serde(skip_serializing_if = "empty_json_value", default)]
     pub params: Option<serde_json::Value>,
     #[serde(
         skip_serializing_if = "HeaderMap::is_empty",
@@ -24,10 +23,34 @@ pub struct RequestProfile {
         default
     )]
     pub headers: HeaderMap,
+    // TODO: known skip_serializing_if
+    #[serde(skip_serializing_if = "empty_json_value")]
     pub body: Option<serde_json::Value>,
 }
 
+fn empty_json_value(v: &Option<serde_json::Value>) -> bool {
+    v.as_ref().map_or(true, |v| {
+        v.is_null() || (v.is_object() && v.as_object().unwrap().is_empty())
+    })
+}
+
 impl RequestProfile {
+    pub fn new(
+        method: Method,
+        url: Url,
+        params: Option<serde_json::Value>,
+        headers: HeaderMap,
+        body: Option<serde_json::Value>,
+    ) -> Self {
+        Self {
+            method,
+            url,
+            params,
+            headers,
+            body,
+        }
+    }
+
     pub async fn send(&self, args: &ExtraArgs) -> Result<ResponseExt> {
         let (headers, query, body) = self.generate(args)?;
         let request = Client::new().request(self.method.clone(), self.url.clone());
@@ -48,12 +71,6 @@ impl RequestProfile {
             self.params.clone().unwrap_or(json!({})),
             self.body.clone().unwrap_or(json!({})),
         );
-
-        // for (k, v) in &args.headers {
-        // FIXME: borrowed data escapes outside of associated function`args`, escapes the associated function body here
-        // TODO: known the headers.insert
-        //   headers.insert(HeaderName::from_str(k)?, HeaderValue::from_str(v)?);
-        // }
 
         let extra_headers: Vec<(HeaderName, HeaderValue)> = args
             .headers
@@ -93,5 +110,25 @@ impl RequestProfile {
             }
         }
         Ok(())
+    }
+}
+
+impl FromStr for RequestProfile {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let url: Url = s.parse()?;
+        let query = url.query_pairs();
+        let mut params = json!({});
+        for (k, v) in query {
+            params[k.as_ref()] = v.parse()?;
+        }
+        Ok(Self::new(
+            Method::GET,
+            url,
+            Some(params),
+            HeaderMap::new(),
+            None,
+        ))
     }
 }

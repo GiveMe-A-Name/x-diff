@@ -22,7 +22,6 @@ impl ResponseExt {
         }
         let content_type = get_content_type(headers);
         let text = response.text().await?;
-        // TODO: what is as_deref() & as_def()?
         match content_type.as_deref() {
             Some("application/json") => {
                 let text = filter_json(&text, profile)?;
@@ -32,6 +31,14 @@ impl ResponseExt {
         }
 
         Ok(output)
+    }
+
+    pub fn get_header_keys(&self) -> Vec<String> {
+        let header_keys = self.0.headers().keys();
+        header_keys
+            .into_iter()
+            .map(|key| key.as_str().to_string())
+            .collect()
     }
 }
 
@@ -47,13 +54,17 @@ fn filter_json(text: &str, profile: &Option<ResponseProfile>) -> Result<String> 
 }
 
 fn get_content_type(headers: &HeaderMap) -> Option<String> {
-    // TODO: Why can't return &str?
     // the flatten function can flatten the Option<Option<T>> => Option<T>
     headers
         .get(header::CONTENT_TYPE)
         // the Content-Type always be `application/json; UTF-8`
         // so split by `;`
-        // TODO: what is and_then
-        .and_then(|value| value.to_str().unwrap().split(';').next())
-        .map(|str| str.to_owned())
+        .and_then(|value| {
+            value
+                .to_str()
+                .unwrap()
+                .split(';')
+                .next()
+                .map(|str| str.to_owned())
+        })
 }

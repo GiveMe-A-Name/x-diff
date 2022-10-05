@@ -1,14 +1,14 @@
 ---
-rust:
+todo:
   request_first:
     method: GET
-    url: https://www.rust-lang.org/
-    headers:
-      user-agent: Aloha
-    params:
-      hello: world
-    body: "123"
+    url: https://www.baidu.com/
   request_second:
     method: GET
-    url: https://www.rust-lang.org/
-    params: {}
+    url: https://www.baidu.com/
+  response:
+    skip_headers:
+      - accept-ranges
+      - traceid
+      - accept-ranges
+      - connection

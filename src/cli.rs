@@ -11,11 +11,13 @@ pub struct Args {
 }
 
 #[derive(Debug, Clone, Subcommand)]
-// TODO: ?? what is `none_exhaustive`?
 #[non_exhaustive]
 pub enum Action {
     /// Diff two Api Response based on given profile
     Run(RunArgs),
+
+    /// Parse URLs to generate a profile
+    Parse,
 }
 
 #[derive(Parser, Debug, Clone)]
@@ -78,7 +80,7 @@ impl From<Vec<KeyVal>> for ExtraArgs {
             query: vec![],
             body: vec![],
         };
-        // diffrence about args.into_iter(), for x in args
+        // difference about args.into_iter(), for x in args
         for arg in args {
             let arg_item = (arg.key, arg.val);
             match arg.key_type {

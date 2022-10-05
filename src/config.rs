@@ -40,7 +40,9 @@ impl DiffConfig {
 
     fn validate(&self) -> Result<()> {
         for (name, profile) in &self.profiles {
-            profile.validate().context(name.to_string())?;
+            profile
+                .validate()
+                .context(format!("failed to validate profile `{}`", name.to_string()))?;
         }
         Ok(())
     }
@@ -55,6 +57,18 @@ pub struct DiffProfile {
 }
 
 impl DiffProfile {
+    pub fn new(
+        req1: RequestProfile,
+        req2: RequestProfile,
+        response_profile: ResponseProfile,
+    ) -> Self {
+        Self {
+            request_first: req1,
+            request_second: req2,
+            response: Some(response_profile),
+        }
+    }
+
     pub async fn diff(&self, args: ExtraArgs) -> Result<()> {
         let (res1, res2) = {
             let (res1, res2) = join!(
@@ -72,7 +86,6 @@ impl DiffProfile {
             (txt1?, txt2?)
         };
         let result = diff_text(text1, text2)?;
-        // TODO: known about std::io::stdout;
         let mut stdout = std::io::stdout().lock();
         stdout.write(result.as_bytes()).map_err(|e| anyhow!(e))?;
         Ok(())
@@ -95,4 +108,13 @@ pub struct ResponseProfile {
     pub skip_headers: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub skip_body: Vec<String>,
+}
+
+impl ResponseProfile {
+    pub fn new(skip_headers: Vec<String>, skip_body: Vec<String>) -> Self {
+        Self {
+            skip_headers,
+            skip_body,
+        }
+    }
 }
